@@ -1,0 +1,454 @@
+<!-- This is a static file -->
+<!-- served from your routes in server.js -->
+
+<!-- You might want to try something fancier: -->
+<!-- html/nunjucks docs: https://mozilla.github.io/nunjucks/ -->
+<!-- pug: https://pugjs.org/ -->
+<!-- haml: http://haml.info/ -->
+<!-- hbs(handlebars): http://handlebarsjs.com/ -->
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        background: #eee;
+        display: block;
+        margin: 0 auto;
+      }
+    </style>
+    <!-- import the webpage's stylesheet -->
+    <link rel="stylesheet" href="/style.css" />
+
+    <!-- import the webpage's client-side javascript file -->
+    <script src="/client.js" defer></script>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <header>
+      <div class="jumbotron text-center">
+        <h1 id="NameOfWebsite">Final Exam Pt.2</h1>
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-12"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+ <style>
+      body {
+        background-image: url("https://i.redd.it/in6u21xbe1821.jpg");
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="480" height="320"></canvas>
+
+    <script>
+      var canvas = document.getElementById("myCanvas");
+      var ctx = canvas.getContext("2d");
+      var ballRadius = 10;
+      var x = canvas.width / 2;
+      var y = canvas.height - 30;
+      var dx = 2;
+      var dy = -2;
+      var paddleHeight = 10;
+      var paddleWidth = 75;
+      var paddleX = (canvas.width - paddleWidth) / 2;
+      var rightPressed = false;
+      var leftPressed = false;
+      var brickRowCount = 5;
+      var brickColumnCount = 3;
+      var brickWidth = 75;
+      var brickHeight = 20;
+      var brickPadding = 10;
+      var brickOffsetTop = 30;
+      var brickOffsetLeft = 30;
+      var score = 0;
+      var lives = 3;
+
+      var bricks = [];
+      for (var c = 0; c < brickColumnCount; c++) {
+        bricks[c] = [];
+        for (var r = 0; r < brickRowCount; r++) {
+          bricks[c][r] = { x: 0, y: 0, status: 1 };
+        }
+      }
+
+      document.addEventListener("keydown", keyDownHandler, false);
+      document.addEventListener("keyup", keyUpHandler, false);
+      document.addEventListener("mousemove", mouseMoveHandler, false);
+
+      function keyDownHandler(e) {
+        if (e.keyCode == 39) {
+          rightPressed = true;
+        } else if (e.keyCode == 37) {
+          leftPressed = true;
+        }
+      }
+      function keyUpHandler(e) {
+        if (e.keyCode == 39) {
+          rightPressed = false;
+        } else if (e.keyCode == 37) {
+          leftPressed = false;
+        }
+      }
+      function mouseMoveHandler(e) {
+        var relativeX = e.clientX - canvas.offsetLeft;
+        if (relativeX > 0 && relativeX < canvas.width) {
+          paddleX = relativeX - paddleWidth / 2;
+        }
+      }
+      function collisionDetection() {
+        for (var c = 0; c < brickColumnCount; c++) {
+          for (var r = 0; r < brickRowCount; r++) {
+            var b = bricks[c][r];
+            if (b.status == 1) {
+              if (
+                x > b.x &&
+                x < b.x + brickWidth &&
+                y > b.y &&
+                y < b.y + brickHeight
+              ) {
+                dy = -dy;
+                b.status = 0;
+                score++;
+                if (score == brickRowCount * brickColumnCount) {
+                  alert("YOU WIN, CONGRATS!");
+                  document.location.reload();
+                }
+              }
+            }
+          }
+        }
+      }
+
+      function drawBall() {
+        ctx.beginPath();
+        ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+        ctx.fillStyle = "#0095DD";
+        ctx.fill();
+        ctx.closePath();
+      }
+      function drawPaddle() {
+        ctx.beginPath();
+        ctx.rect(
+          paddleX,
+          canvas.height - paddleHeight,
+          paddleWidth,
+          paddleHeight
+        );
+        ctx.fillStyle = "#0095DD";
+        ctx.fill();
+        ctx.closePath();
+      }
+      function drawBricks() {
+        for (var c = 0; c < brickColumnCount; c++) {
+          for (var r = 0; r < brickRowCount; r++) {
+            if (bricks[c][r].status == 1) {
+              var brickX = r * (brickWidth + brickPadding) + brickOffsetLeft;
+              var brickY = c * (brickHeight + brickPadding) + brickOffsetTop;
+              bricks[c][r].x = brickX;
+              bricks[c][r].y = brickY;
+              ctx.beginPath();
+              ctx.rect(brickX, brickY, brickWidth, brickHeight);
+              ctx.fillStyle = "#0095DD";
+              ctx.fill();
+              ctx.closePath();
+            }
+          }
+        }
+      }
+      function drawScore() {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#0095DD";
+        ctx.fillText("Score: " + score, 8, 20);
+      }
+      function drawLives() {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#0095DD";
+        ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBricks();
+        drawBall();
+        drawPaddle();
+        drawScore();
+        drawLives();
+        collisionDetection();
+
+        if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
+          dx = -dx;
+        }
+        if (y + dy < ballRadius) {
+          dy = -dy;
+        } else if (y + dy > canvas.height - ballRadius) {
+          if (x > paddleX && x < paddleX + paddleWidth) {
+            dy = -dy;
+          } else {
+            lives--;
+            if (!lives) {
+              alert("GAME OVER");
+              document.location.reload();
+            } else {
+              x = canvas.width / 2;
+              y = canvas.height - 30;
+              dx = 3;
+              dy = -3;
+              paddleX = (canvas.width - paddleWidth) / 2;
+            }
+          }
+        }
+
+        if (rightPressed && paddleX < canvas.width - paddleWidth) {
+          paddleX += 7;
+        } else if (leftPressed && paddleX > 0) {
+          paddleX -= 7;
+        }
+
+        x += dx;
+        y += dy;
+        requestAnimationFrame(draw);
+      }
+
+      draw();
+    </script>
+    <button
+      type="button"
+      onclick="document.getElementById('demo').innerHTML = Date()"
+    >
+      Click me to display Date and Time.
+    </button>
+    <p id="demo"></p>
+
+    <div id="m-booked-bl-simple-week-vertical-43533">
+      <div
+        class="booked-wzs-160-275 weather-customize"
+        style="background-color:#137AE9; width:160px;"
+        id="width1 "
+      >
+        <a
+          target="_blank"
+          class="booked-wzs-top-160-275"
+          href="https://www.booked.net/"
+          ><img src="//s.bookcdn.com/images/letter/s5.gif" alt="booked.net"
+        /></a>
+        <div class="booked-wzs-160-275_in">
+          <div class="booked-wzs-160-275-data">
+            <div class="booked-wzs-160-275-left-img wrz-03"></div>
+            <div class="booked-wzs-160-275-right">
+              <div class="booked-wzs-day-deck">
+                <div class="booked-wzs-day-val">
+                  <div class="booked-wzs-day-number">-2</div>
+                  <div class="booked-wzs-day-dergee">
+                    <div class="booked-wzs-day-dergee-val">&deg;</div>
+                    <div class="booked-wzs-day-dergee-name">C</div>
+                  </div>
+                </div>
+                <div class="booked-wzs-day">
+                  <div class="booked-wzs-day-d">-2&deg;</div>
+                  <div class="booked-wzs-day-n">-3&deg;</div>
+                </div>
+              </div>
+              <div class="booked-wzs-160-275-info">
+                <div class="booked-wzs-160-275-city smolest">Collingwood</div>
+                <div class="booked-wzs-160-275-date">Friday, 29</div>
+              </div>
+            </div>
+          </div>
+          <a
+            target="_blank"
+            href="https://ibooked.ca/weather/collingwood-6147"
+            class="booked-wzs-bottom-160-275"
+          >
+            <table cellpadding="0" cellspacing="0" class="booked-wzs-table-160">
+              <tr>
+                <td class="week-day">
+                  <span class="week-day-txt">Saturday</span>
+                </td>
+                <td class="week-day-ico">
+                  <div class="wrz-sml wrzs-03"></div>
+                </td>
+                <td class="week-day-val">-1&deg;</td>
+                <td class="week-day-val">-4&deg;</td>
+              </tr>
+              <tr>
+                <td class="week-day">
+                  <span class="week-day-txt">Sunday</span>
+                </td>
+                <td class="week-day-ico">
+                  <div class="wrz-sml wrzs-22"></div>
+                </td>
+                <td class="week-day-val">-3&deg;</td>
+                <td class="week-day-val">-4&deg;</td>
+              </tr>
+              <tr>
+                <td class="week-day">
+                  <span class="week-day-txt">Monday</span>
+                </td>
+                <td class="week-day-ico">
+                  <div class="wrz-sml wrzs-03"></div>
+                </td>
+                <td class="week-day-val">-2&deg;</td>
+                <td class="week-day-val">-6&deg;</td>
+              </tr>
+              <tr>
+                <td class="week-day">
+                  <span class="week-day-txt">Tuesday</span>
+                </td>
+                <td class="week-day-ico">
+                  <div class="wrz-sml wrzs-22"></div>
+                </td>
+                <td class="week-day-val">0&deg;</td>
+                <td class="week-day-val">-5&deg;</td>
+              </tr>
+              <tr>
+                <td class="week-day">
+                  <span class="week-day-txt">Wednesday</span>
+                </td>
+                <td class="week-day-ico">
+                  <div class="wrz-sml wrzs-22"></div>
+                </td>
+                <td class="week-day-val"><span class="plus">+</span>1&deg;</td>
+                <td class="week-day-val">-2&deg;</td>
+              </tr>
+              <tr>
+                <td class="week-day">
+                  <span class="week-day-txt">Thursday</span>
+                </td>
+                <td class="week-day-ico">
+                  <div class="wrz-sml wrzs-03"></div>
+                </td>
+                <td class="week-day-val"><span class="plus">+</span>2&deg;</td>
+                <td class="week-day-val">-2&deg;</td>
+              </tr>
+            </table>
+
+            <div class="booked-wzs-center">
+              <span class="booked-wzs-bottom-l">See 7-Day Forecast</span>
+            </div>
+          </a>
+        </div>
+      </div>
+      <script type="text/javascript">
+        var css_file = document.createElement("link");
+        css_file.setAttribute("rel", "stylesheet");
+        css_file.setAttribute("type", "text/css");
+        css_file.setAttribute(
+          "href",
+          "https://s.bookcdn.com/css/w/booked-wzs-widget-160x275.css?v=0.0.1"
+        );
+        document.getElementsByTagName("head")[0].appendChild(css_file);
+        function setWidgetData(data) {
+          if (typeof data != "undefined" && data.results.length > 0) {
+            for (var i = 0; i < data.results.length; ++i) {
+              var objMainBlock = document.getElementById(
+                "m-booked-bl-simple-week-vertical-43533"
+              );
+              if (objMainBlock !== null) {
+                var copyBlock = document.getElementById(
+                  "m-bookew-weather-copy-" + data.results[i].widget_type
+                );
+                objMainBlock.innerHTML = data.results[i].html_code;
+                if (copyBlock !== null) objMainBlock.appendChild(copyBlock);
+              }
+            }
+          } else {
+            alert("data=undefined||data.results is empty");
+          }
+        }
+      </script>
+      <script
+        type="text/javascript"
+        charset="UTF-8"
+        src="https://widgets.booked.net/weather/info?action=get_weather_info&ver=6&cityID=6147&type=4&scode=124&ltid=3457&domid=569&anc_id=45213&cmetric=1&wlangID=1&color=137AE9&wwidth=160&header_color=ffffff&text_color=333333&link_color=08488D&border_form=1&footer_color=ffffff&footer_text_color=333333&transparent=0"
+      ></script>
+    </div>
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/Pgt9ZWWw_YA"
+      frameborder="0"
+      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/KrlQhjgYRSA"
+      frameborder="0"
+      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/azZCW24XtT4"
+      frameborder="0"
+      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/UB1O30fR-EE"
+      frameborder="0"
+      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/O5nskjZ_GoI"
+      frameborder="0"
+      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+    <iframe
+      width="560"
+      height="315"
+      src="https://www.youtube.com/embed/MGL047HMxSk"
+      frameborder="0"
+      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+    <p class="dog">
+    This is my computer self design project   
+    </p>
+    <iframe
+  src="https://docs.google.com/presentation/d/e/2PACX-1vS_KJZ84Mr8QQekm5SivKDi7HSTCrYqL5-0GALgOSs9y3ePeqspq9Ukr0TI7PK0YpghIbofYEIhbUMS/embed?start=false&loop=false&delayms=60000"
+  frameborder="0"
+  width="960"
+  height="569"
+  allowfullscreen="true"
+  mozallowfullscreen="true"
+  webkitallowfullscreen="true"
+></iframe>
+<p class="dog">
+  This is my APIs And If Statement Assighment.
+</p>
+<iframe
+  src="https://docs.google.com/presentation/d/e/2PACX-1vQ3bB7oCIuDv3bjOKlDbRcrXrEwOfTBA7yJy-ZBltbph94H2TAKRM7JEQHndj-rfpE5KA1tCik5DEUx/embed?start=false&loop=false&delayms=30000"
+  frameborder="0"
+  width="960"
+  height="569"
+  allowfullscreen="true"
+  mozallowfullscreen="true"
+  webkitallowfullscreen="true"
+></iframe>
+  </body>
+</html>
