@@ -1,0 +1,15 @@
+/* styles */
+/* called by your view template */
+#NameOfWebsite {
+  color: red;
+  font-size: 100px;
+  font-weight: bold;
+}
+#demo{
+  color: red;
+  font-size: 16px;
+}
+.dog{
+  color: red;
+  font-size: 36px;
+}
